@@ -33,7 +33,7 @@ leon_trim_whitespace_impl(Application_Links* app, Buffer_ID buffer){
 					if(j > i && std::isspace(tempBuffer[j])){
 						*tmp = new Batch_Edit;
 						(*tmp)->next = nullptr;
-						(*tmp)->edit.text = string_u8_litexpr("");
+						(*tmp)->edit.text = string_u8_empty;
 						(*tmp)->edit.range = {i, j};
 						tmp = &(*tmp)->next;
 					}

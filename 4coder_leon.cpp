@@ -8,17 +8,22 @@
 #include "4coder_default_include.cpp"
 #include "4coder_default_map.cpp"
 #include "4coder_leon_whitespace.cpp"
+#include "4coder_leon_multiline.cpp"
 
 global bool leon_trimWhitespaceOnFileSave = true;
 
 CUSTOM_COMMAND_SIG(leon_enable_auto_trim_whitespace)
-CUSTOM_DOC("Enables automatic trimming of trailing whitespace on file save"){
+CUSTOM_DOC("Enables trimming of trailing whitespace on file save."){
 	leon_trimWhitespaceOnFileSave = true;
 }
 
 CUSTOM_COMMAND_SIG(leon_disable_auto_trim_whitespace)
-CUSTOM_DOC("Disables automatic trimming of trailing whitespace on file save"){
+CUSTOM_DOC("Disables trimming of trailing whitespace on file save."){
 	leon_trimWhitespaceOnFileSave = false;
+}
+
+CUSTOM_COMMAND_SIG(leon_write_text_input){
+	 write_text_input(app);
 }
 
 BUFFER_HOOK_SIG(leon_file_save){
@@ -30,13 +35,13 @@ BUFFER_HOOK_SIG(leon_file_save){
 
 void
 custom_layer_init(Application_Links *app){
-	Thread_Context *tctx = get_thread_context(app);
+	Thread_Context* tctx = get_thread_context(app);
 
 	// NOTE(allen): setup for default framework
 	async_task_handler_init(app, &global_async_system);
 	code_index_init();
 	buffer_modified_set_init();
-	Profile_Global_List *list = get_core_profile_list(app);
+	Profile_Global_List* list = get_core_profile_list(app);
 	ProfileThreadName(tctx, list, string_u8_litexpr("main"));
 	initialize_managed_id_metadata(app);
 	set_default_color_scheme(app);
@@ -100,7 +105,7 @@ custom_layer_init(Application_Links *app){
 
 	SelectMap(mapid_file);
 	ParentMap(mapid_global);
-	BindTextInput(write_text_input);
+	BindTextInput(leon_write_text_input); // NOTE(Leon): Override
 	BindMouse(click_set_cursor_and_mark, MouseCode_Left);
 	BindMouseRelease(click_set_cursor, MouseCode_Left);
 	BindCore(click_set_cursor_and_mark, CoreCode_ClickActivateView);
@@ -117,8 +122,12 @@ custom_layer_init(Application_Links *app){
 	Bind(page_down,              KeyCode_PageDown);
 	Bind(goto_beginning_of_file, KeyCode_PageUp, KeyCode_Control);
 	Bind(goto_end_of_file,       KeyCode_PageDown, KeyCode_Control);
-	Bind(move_up_to_blank_line_end,        KeyCode_Up, KeyCode_Control);
-	Bind(move_down_to_blank_line_end,      KeyCode_Down, KeyCode_Control);
+	Bind(move_up_10,             KeyCode_Up, KeyCode_Control); // NOTE(Leon): Override
+	Bind(move_down_10,           KeyCode_Down, KeyCode_Control); // NOTE(Leon): Override
+	Bind(leon_add_cursor_up,     KeyCode_Up, KeyCode_Shift); // NOTE(Leon): Custom function
+	Bind(leon_add_cursor_down,   KeyCode_Down, KeyCode_Shift); // NOTE(Leon): Custom function
+	Bind(move_up_to_blank_line_end,        KeyCode_Up, KeyCode_Control, KeyCode_Shift); // NOTE(Leon): Custom Function
+	Bind(move_down_to_blank_line_end,      KeyCode_Down, KeyCode_Control, KeyCode_Shift); // NOTE(Leon): Custom Function
 	Bind(move_left_whitespace_boundary,    KeyCode_Left, KeyCode_Control);
 	Bind(move_right_whitespace_boundary,   KeyCode_Right, KeyCode_Control);
 	Bind(move_line_up,                     KeyCode_Up, KeyCode_Alt);
