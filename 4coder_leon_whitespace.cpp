@@ -1,18 +1,10 @@
-function void
-leon_free_batch_edits(Batch_Edit* e){
-	if(e->next)
-		leon_free_batch_edits(e->next);
-
-	delete e;
-}
-
-function void
+internal void
 leon_trim_whitespace_impl(Application_Links* app, Buffer_ID buffer){
 	auto bufferSize = buffer_get_size(app, buffer);
 
 	if(bufferSize > 1){
-		Batch_Edit* edits = nullptr;
-		auto tmp = &edits;
+		auto edits = new Batch_Edit[buffer_get_line_count(app, buffer)]; // Maximum: one edit per line
+		auto numEdits = 0;
 		auto tempBuffer = new u8[bufferSize];
 
 		if(buffer_read_range(app, buffer, {0, bufferSize}, tempBuffer)){
@@ -31,11 +23,10 @@ leon_trim_whitespace_impl(Application_Links* app, Buffer_ID buffer){
 						++j;
 
 					if(j > i && std::isspace(tempBuffer[j])){
-						*tmp = new Batch_Edit;
-						(*tmp)->next = nullptr;
-						(*tmp)->edit.text = string_u8_empty;
-						(*tmp)->edit.range = {i, j};
-						tmp = &(*tmp)->next;
+						edits[numEdits].next = nullptr;
+						edits[numEdits].edit.text = string_u8_empty;
+						edits[numEdits].edit.range = {i, j};
+						++numEdits;
 					}
 
 					i = j;
@@ -44,26 +35,28 @@ leon_trim_whitespace_impl(Application_Links* app, Buffer_ID buffer){
 
 			// Inserting single final newline
 
-			*tmp = new Batch_Edit;
-			(*tmp)->next = nullptr;
-			(*tmp)->edit.text = string_u8_litexpr("\n");
-			(*tmp)->edit.range = {textEnd, bufferSize};
-			tmp = &(*tmp)->next;
+			edits[numEdits].next = nullptr;
+			edits[numEdits].edit.text = string_u8_litexpr("\n");
+			edits[numEdits].edit.range = {textEnd, bufferSize};
+			++numEdits;
 		}
 
-		if(edits){
+		if(numEdits > 0){
+			for(auto i = 0; i < numEdits - 1; ++i)
+				edits[i].next = &edits[i + 1];
+
 			buffer_batch_edit(app, buffer, edits);
-			leon_free_batch_edits(edits);
 		}
 
 		delete[] tempBuffer;
+		delete[] edits;
 	}
 }
 
 CUSTOM_COMMAND_SIG(leon_trim_whitespace)
 CUSTOM_DOC("Discards trailing whitespace and inserts single final newline"){
-	auto view = get_active_view(app, Access_ReadVisible);
-	auto buffer = view_get_buffer(app, view, Access_ReadVisible);
+	auto view = get_active_view(app, Access_ReadWriteVisible);
+	auto buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
 
 	leon_trim_whitespace_impl(app, buffer);
 }
