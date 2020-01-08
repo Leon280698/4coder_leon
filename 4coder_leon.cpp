@@ -7,8 +7,8 @@
 #include <cctype>
 #include "4coder_default_include.cpp"
 #include "4coder_default_map.cpp"
+
 #include "4coder_leon_whitespace.cpp"
-#include "4coder_leon_multiline.cpp"
 
 global bool leon_trimWhitespaceOnFileSave = true;
 
@@ -23,7 +23,15 @@ CUSTOM_DOC("Disables trimming of trailing whitespace on file save."){
 }
 
 CUSTOM_COMMAND_SIG(leon_write_text_input){
-	 write_text_input(app);
+	write_text_input(app);
+}
+
+CUSTOM_COMMAND_SIG(leon_write_text_and_auto_indent){
+	write_text_and_auto_indent(app);
+}
+
+CUSTOM_COMMAND_SIG(leon_backspace_char){
+	backspace_char(app);
 }
 
 BUFFER_HOOK_SIG(leon_file_save){
@@ -31,6 +39,90 @@ BUFFER_HOOK_SIG(leon_file_save){
 		leon_trim_whitespace_impl(app, buffer_id);
 
 	return default_file_save(app, buffer_id);
+}
+
+function void
+leon_render_caller(Application_Links *app, Frame_Info frame_info, View_ID view_id){
+	ProfileScope(app, "leon render caller");
+	View_ID active_view = get_active_view(app, Access_Always);
+	b32 is_active_view = (active_view == view_id);
+
+	Rect_f32 region = draw_background_and_margin(app, view_id, is_active_view);
+	Rect_f32 prev_clip = draw_set_clip(app, region);
+
+	Buffer_ID buffer = view_get_buffer(app, view_id, Access_Always);
+	Face_ID face_id = get_face_id(app, buffer);
+	Face_Metrics face_metrics = get_face_metrics(app, face_id);
+	f32 line_height = face_metrics.line_height;
+	f32 digit_advance = face_metrics.decimal_digit_advance;
+
+	// NOTE(allen): file bar
+	b64 showing_file_bar = false;
+	if (view_get_setting(app, view_id, ViewSetting_ShowFileBar, &showing_file_bar) && showing_file_bar){
+		Rect_f32_Pair pair = layout_file_bar_on_top(region, line_height);
+		draw_file_bar(app, view_id, buffer, face_id, pair.min);
+		region = pair.max;
+	}
+
+	Buffer_Scroll scroll = view_get_buffer_scroll(app, view_id);
+
+	Buffer_Point_Delta_Result delta = delta_apply(app, view_id,
+												  frame_info.animation_dt, scroll);
+	if (!block_match_struct(&scroll.position, &delta.point)){
+		block_copy_struct(&scroll.position, &delta.point);
+		view_set_buffer_scroll(app, view_id, scroll, SetBufferScroll_NoCursorChange);
+	}
+	if (delta.still_animating){
+		animate_in_n_milliseconds(app, 0);
+	}
+
+	// NOTE(allen): query bars
+	{
+		Query_Bar *space[32];
+		Query_Bar_Ptr_Array query_bars = {};
+		query_bars.ptrs = space;
+		if (get_active_query_bars(app, view_id, ArrayCount(space), &query_bars)){
+			for (i32 i = 0; i < query_bars.count; i += 1){
+				Rect_f32_Pair pair = layout_query_bar_on_top(region, line_height, 1);
+				draw_query_bar(app, query_bars.ptrs[i], face_id, pair.min);
+				region = pair.max;
+			}
+		}
+	}
+
+	// NOTE(allen): FPS hud
+	if (show_fps_hud){
+		Rect_f32_Pair pair = layout_fps_hud_on_bottom(region, line_height);
+		draw_fps_hud(app, frame_info, face_id, pair.max);
+		region = pair.min;
+		animate_in_n_milliseconds(app, 1000);
+	}
+
+	// NOTE(allen): layout line numbers
+	Rect_f32 line_number_rect = {};
+	if (global_config.show_line_number_margins){
+		Rect_f32_Pair pair = layout_line_number_margin(app, buffer, region, digit_advance);
+		line_number_rect = pair.min;
+		region = pair.max;
+	}
+
+	// NOTE(allen): begin buffer render
+	Buffer_Point buffer_point = scroll.position;
+	Text_Layout_ID text_layout_id = text_layout_create(app, buffer, region, buffer_point);
+
+	// NOTE(allen): draw line numbers
+	if (global_config.show_line_number_margins){
+		draw_line_number_margin(app, view_id, buffer, face_id, text_layout_id, line_number_rect);
+	}
+
+	// NOTE(allen): draw the buffer
+	default_render_buffer(app, view_id, face_id, buffer, text_layout_id, region);
+
+	// NOTE(Leon): Begin custom rendering
+	// NOTE(Leon): End custom rendering
+
+	text_layout_free(app, text_layout_id);
+	draw_set_clip(app, prev_clip);
 }
 
 void
@@ -49,6 +141,7 @@ custom_layer_init(Application_Links *app){
 	// NOTE(allen): default hooks and command maps
 	set_all_default_hooks(app);
 	set_custom_hook(app, HookID_SaveFile, leon_file_save);
+	set_custom_hook(app, HookID_RenderCaller, leon_render_caller);
 	mapping_init(tctx, &framework_mapping);
 
 	// Setting up default mapping
@@ -75,7 +168,7 @@ custom_layer_init(Application_Links *app){
 	Bind(close_build_panel,             KeyCode_Comma, KeyCode_Alt);
 	Bind(goto_next_jump,                KeyCode_N, KeyCode_Alt);
 	Bind(goto_prev_jump,                KeyCode_N, KeyCode_Alt, KeyCode_Shift);
-	Bind(build_in_build_panel,          KeyCode_M, KeyCode_Alt);
+	Bind(build_in_build_panel,          KeyCode_B, KeyCode_Control, KeyCode_Shift); // NOTE(Leon): Override
 	Bind(goto_first_jump,               KeyCode_M, KeyCode_Alt, KeyCode_Shift);
 	Bind(toggle_filebar,                KeyCode_B, KeyCode_Alt);
 	Bind(execute_any_cli,               KeyCode_Z, KeyCode_Alt);
@@ -111,7 +204,7 @@ custom_layer_init(Application_Links *app){
 	BindCore(click_set_cursor_and_mark, CoreCode_ClickActivateView);
 	BindMouseMove(click_set_cursor_if_lbutton);
 	Bind(delete_char,            KeyCode_Delete);
-	Bind(backspace_char,         KeyCode_Backspace);
+	Bind(leon_backspace_char,    KeyCode_Backspace); // NOTE(Leon): Override
 	Bind(move_up,                KeyCode_Up);
 	Bind(move_down,              KeyCode_Down);
 	Bind(move_left,              KeyCode_Left);
@@ -124,8 +217,6 @@ custom_layer_init(Application_Links *app){
 	Bind(goto_end_of_file,       KeyCode_PageDown, KeyCode_Control);
 	Bind(move_up_10,             KeyCode_Up, KeyCode_Control); // NOTE(Leon): Override
 	Bind(move_down_10,           KeyCode_Down, KeyCode_Control); // NOTE(Leon): Override
-	Bind(leon_add_cursor_up,     KeyCode_Up, KeyCode_Shift); // NOTE(Leon): Custom function
-	Bind(leon_add_cursor_down,   KeyCode_Down, KeyCode_Shift); // NOTE(Leon): Custom function
 	Bind(move_up_to_blank_line_end,        KeyCode_Up, KeyCode_Control, KeyCode_Shift); // NOTE(Leon): Custom Function
 	Bind(move_down_to_blank_line_end,      KeyCode_Down, KeyCode_Control, KeyCode_Shift); // NOTE(Leon): Custom Function
 	Bind(move_left_whitespace_boundary,    KeyCode_Left, KeyCode_Control);
@@ -174,7 +265,7 @@ custom_layer_init(Application_Links *app){
 
 	SelectMap(mapid_code);
 	ParentMap(mapid_file);
-	BindTextInput(write_text_and_auto_indent);
+	BindTextInput(leon_write_text_and_auto_indent); // NOTE(Leon): Override
 	Bind(move_left_alpha_numeric_boundary,           KeyCode_Left, KeyCode_Control);
 	Bind(move_right_alpha_numeric_boundary,          KeyCode_Right, KeyCode_Control);
 	Bind(move_left_alpha_numeric_or_camel_boundary,  KeyCode_Left, KeyCode_Alt);
