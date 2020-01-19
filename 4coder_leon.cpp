@@ -27,7 +27,38 @@ CUSTOM_COMMAND_SIG(leon_write_text_input){
 }
 
 CUSTOM_COMMAND_SIG(leon_write_text_and_auto_indent){
-	write_text_and_auto_indent(app);
+	User_Input in = get_current_input(app);
+	String_Const_u8 insert = to_writable(&in);
+
+	if(insert.str != 0 && insert.size > 0){
+		b32 do_auto_indent = false;
+
+		for (u64 i = 0; !do_auto_indent && i < insert.size; ++i){
+			switch (insert.str[i]){
+				case ';': case ':':
+				case '{': case '}':
+				case '(': case ')':
+				case '[': case ']':
+				case '#':
+				case '\n': /*case '\t':*/ // Don't auto indent when typing tab since it is really annoying...
+					do_auto_indent = true;
+					break;
+			}
+		}
+
+		if(do_auto_indent){
+			View_ID view = get_active_view(app, Access_ReadWriteVisible);
+			Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
+			Range_i64 pos = {};
+			pos.min = view_get_cursor_pos(app, view);
+			write_text_input(app);
+			pos.max= view_get_cursor_pos(app, view);
+			auto_indent_buffer(app, buffer, pos, 0);
+			move_past_lead_whitespace(app, view, buffer);
+		}else{
+			write_text_input(app);
+		}
+	}
 }
 
 CUSTOM_COMMAND_SIG(leon_backspace_char){
@@ -271,8 +302,8 @@ custom_layer_init(Application_Links *app){
 	Bind(move_left_alpha_numeric_or_camel_boundary,  KeyCode_Left, KeyCode_Alt);
 	Bind(move_right_alpha_numeric_or_camel_boundary, KeyCode_Right, KeyCode_Alt);
 	Bind(comment_line_toggle,        KeyCode_Semicolon, KeyCode_Control);
-	Bind(word_complete,              KeyCode_Tab);
-	Bind(auto_indent_range,          KeyCode_Tab, KeyCode_Control);
+	//Bind(word_complete,              KeyCode_Tab); // NOTE(Leon): Disable to be able to type tab characters
+	Bind(word_complete,  	        KeyCode_Tab, KeyCode_Control); // NOTE(Leon): Override
 	Bind(auto_indent_line_at_cursor, KeyCode_Tab, KeyCode_Shift);
 	Bind(word_complete_drop_down,    KeyCode_Tab, KeyCode_Shift, KeyCode_Control);
 	Bind(write_block,                KeyCode_R, KeyCode_Alt);
