@@ -26,3 +26,4 @@ clang++ -I"$CODE_HOME" $arch $opts $debug -std=c++11 "$SOURCE" -shared -o custom
 
 rm "$CODE_HOME/metadata_generator"
 rm $preproc_file
+cp custom_4coder.so ../../
