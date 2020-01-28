@@ -73,7 +73,7 @@ BUFFER_HOOK_SIG(leon_file_save){
 }
 
 void
-custom_layer_init(Application_Links *app){
+custom_layer_init(Application_Links* app){
 	Thread_Context* tctx = get_thread_context(app);
 
 	// NOTE(allen): setup for default framework
@@ -92,7 +92,7 @@ custom_layer_init(Application_Links *app){
 
 	// Setting up default mapping
 
-#ifdef __APPLE__
+#if OS_MAC
 	#define leon_KeyCode_Control KeyCode_Command
 #else
 	#define leon_KeyCode_Control KeyCode_Control
@@ -144,7 +144,9 @@ custom_layer_init(Application_Links *app){
 	Bind(project_fkey_command, KeyCode_F14);
 	Bind(project_fkey_command, KeyCode_F15);
 	Bind(project_fkey_command, KeyCode_F16);
+#if OS_WINDOWS
 	Bind(exit_4coder,          KeyCode_F4, KeyCode_Alt);
+#endif
 	BindMouseWheel(mouse_wheel_scroll);
 	BindMouseWheel(mouse_wheel_change_face_size, leon_KeyCode_Control);
 
@@ -171,15 +173,20 @@ custom_layer_init(Application_Links *app){
 	Bind(move_down_10,           KeyCode_Down, leon_KeyCode_Control); // NOTE(Leon): Override
 	Bind(move_up_to_blank_line_end,        KeyCode_Up, leon_KeyCode_Control, KeyCode_Shift); // NOTE(Leon): Custom Function
 	Bind(move_down_to_blank_line_end,      KeyCode_Down, leon_KeyCode_Control, KeyCode_Shift); // NOTE(Leon): Custom Function
+#if OS_MAC
+	Bind(seek_beginning_of_line,           KeyCode_Left, KeyCode_Command);
+	Bind(seek_end_of_line,                 KeyCode_Right, KeyCode_Command);
+#else
 	Bind(move_left_whitespace_boundary,    KeyCode_Left, leon_KeyCode_Control);
 	Bind(move_right_whitespace_boundary,   KeyCode_Right, leon_KeyCode_Control);
+#endif
 	Bind(move_line_up,                     KeyCode_Up, KeyCode_Alt);
 	Bind(move_line_down,                   KeyCode_Down, KeyCode_Alt);
 	Bind(backspace_alpha_numeric_boundary, KeyCode_Backspace, leon_KeyCode_Control);
 	Bind(delete_alpha_numeric_boundary,    KeyCode_Delete, leon_KeyCode_Control);
 	Bind(snipe_backward_whitespace_or_token_boundary, KeyCode_Backspace, KeyCode_Alt);
 	Bind(snipe_forward_whitespace_or_token_boundary,  KeyCode_Delete, KeyCode_Alt);
-	Bind(set_mark,                    KeyCode_Space, KeyCode_Control); // NOTE(Leon): Not using leon_KeyCode_Control because this should be the same on macOS
+	Bind(set_mark,                    KeyCode_Space, KeyCode_Control);
 	Bind(replace_in_range,            KeyCode_A, leon_KeyCode_Control);
 	Bind(copy,                        KeyCode_C, leon_KeyCode_Control);
 	Bind(delete_range,                KeyCode_D, leon_KeyCode_Control);
@@ -196,9 +203,6 @@ custom_layer_init(Application_Links *app){
 	Bind(duplicate_line,              KeyCode_L, leon_KeyCode_Control);
 	Bind(cursor_mark_swap,            KeyCode_M, leon_KeyCode_Control);
 	Bind(reopen,                      KeyCode_O, leon_KeyCode_Control, KeyCode_Shift);
-#ifdef __APPLE__
-	Bind(exit_4coder,                 KeyCode_Q, leon_KeyCode_Control);
-#endif
 	Bind(query_replace_identifier,    KeyCode_Q, leon_KeyCode_Control, KeyCode_Shift);
 	Bind(query_replace_selection,     KeyCode_Q, KeyCode_Alt);
 	Bind(reverse_search,              KeyCode_R, leon_KeyCode_Control);
@@ -220,14 +224,16 @@ custom_layer_init(Application_Links *app){
 	SelectMap(mapid_code);
 	ParentMap(mapid_file);
 	BindTextInput(leon_write_text_and_auto_indent); // NOTE(Leon): Override
-	Bind(move_left_alpha_numeric_boundary,           KeyCode_Left, leon_KeyCode_Control);
-	Bind(move_right_alpha_numeric_boundary,          KeyCode_Right, leon_KeyCode_Control);
+#if !OS_MAC
+	Bind(move_left_alpha_numeric_boundary,           KeyCode_Left, KeyCode_Control);
+	Bind(move_right_alpha_numeric_boundary,          KeyCode_Right, KeyCode_Control);
+#endif
 	Bind(move_left_alpha_numeric_or_camel_boundary,  KeyCode_Left, KeyCode_Alt);
 	Bind(move_right_alpha_numeric_or_camel_boundary, KeyCode_Right, KeyCode_Alt);
 	Bind(comment_line_toggle,        KeyCode_Semicolon, leon_KeyCode_Control);
-	Bind(word_complete,  	        KeyCode_Tab, leon_KeyCode_Control); // NOTE(Leon): Override
+	Bind(word_complete,  	        KeyCode_Space, KeyCode_Shift, KeyCode_Control); // NOTE(Leon): Override
+	//Bind(word_complete_drop_down,    KeyCode_Space, KeyCode_Shift, KeyCode_Control); // NOTE(Leon): Disable since I don't use it anyway
 	Bind(auto_indent_line_at_cursor, KeyCode_Tab, KeyCode_Shift);
-	Bind(word_complete_drop_down,    KeyCode_Tab, KeyCode_Shift, leon_KeyCode_Control);
 	Bind(write_block,                KeyCode_R, KeyCode_Alt);
 	Bind(write_todo,                 KeyCode_T, KeyCode_Alt);
 	Bind(write_note,                 KeyCode_Y, KeyCode_Alt);
