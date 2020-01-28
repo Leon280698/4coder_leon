@@ -72,6 +72,10 @@ BUFFER_HOOK_SIG(leon_file_save){
 	return default_file_save(app, buffer_id);
 }
 
+#if OS_MAC
+void leon_mac_init();
+#endif
+
 void
 custom_layer_init(Application_Links *app){
 	Thread_Context* tctx = get_thread_context(app);
@@ -196,9 +200,6 @@ custom_layer_init(Application_Links *app){
 	Bind(duplicate_line,              KeyCode_L, leon_KeyCode_Control);
 	Bind(cursor_mark_swap,            KeyCode_M, leon_KeyCode_Control);
 	Bind(reopen,                      KeyCode_O, leon_KeyCode_Control, KeyCode_Shift);
-#ifdef __APPLE__
-	Bind(exit_4coder,                 KeyCode_Q, leon_KeyCode_Control);
-#endif
 	Bind(query_replace_identifier,    KeyCode_Q, leon_KeyCode_Control, KeyCode_Shift);
 	Bind(query_replace_selection,     KeyCode_Q, KeyCode_Alt);
 	Bind(reverse_search,              KeyCode_R, leon_KeyCode_Control);
@@ -248,6 +249,10 @@ custom_layer_init(Application_Links *app){
 	Bind(open_file_in_quotes,        KeyCode_1, KeyCode_Alt);
 	Bind(open_matching_file_cpp,     KeyCode_2, KeyCode_Alt);
 	Bind(write_zero_struct,          KeyCode_0, KeyCode_Control);
+
+#if OS_MAC
+	leon_mac_init();
+#endif
 }
 
 // BOTTOM
