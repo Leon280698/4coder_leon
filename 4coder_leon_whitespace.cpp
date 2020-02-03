@@ -35,10 +35,12 @@ leon_trim_whitespace_impl(Application_Links* app, Buffer_ID buffer){
 
 			// Inserting single final newline
 
-			edits[numEdits].next = nullptr;
-			edits[numEdits].edit.text = string_u8_litexpr("\n");
-			edits[numEdits].edit.range = {textEnd, bufferSize};
-			++numEdits;
+			if(textEnd < bufferSize - 1 || !std::isspace(tempBuffer[textEnd])){
+				edits[numEdits].next = nullptr;
+				edits[numEdits].edit.text = string_u8_litexpr("\n");
+				edits[numEdits].edit.range = {textEnd, bufferSize};
+				++numEdits;
+			}
 		}
 
 		if(numEdits > 0){
