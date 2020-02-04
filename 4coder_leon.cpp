@@ -8,20 +8,6 @@
 #include <4coder_default_include.cpp>
 #include <generated/managed_id_metadata.cpp>
 
-#include "4coder_leon_whitespace.cpp"
-
-global bool leon_trimWhitespaceOnFileSave = true;
-
-CUSTOM_COMMAND_SIG(leon_enable_auto_trim_whitespace)
-CUSTOM_DOC("Enables trimming of trailing whitespace on file save."){
-	leon_trimWhitespaceOnFileSave = true;
-}
-
-CUSTOM_COMMAND_SIG(leon_disable_auto_trim_whitespace)
-CUSTOM_DOC("Disables trimming of trailing whitespace on file save."){
-	leon_trimWhitespaceOnFileSave = false;
-}
-
 CUSTOM_COMMAND_SIG(leon_write_text_input){
 	write_text_input(app);
 }
@@ -66,8 +52,7 @@ CUSTOM_COMMAND_SIG(leon_backspace_char){
 }
 
 BUFFER_HOOK_SIG(leon_file_save){
-	if(leon_trimWhitespaceOnFileSave)
-		leon_trim_whitespace_impl(app, buffer_id);
+	clean_all_lines(app);
 
 	return default_file_save(app, buffer_id);
 }
