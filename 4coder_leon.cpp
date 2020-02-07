@@ -202,8 +202,8 @@ custom_layer_init(Application_Links* app){
 	Bind(paste_and_indent,            KeyCode_V, leon_KeyCode_Control);
 	Bind(paste_next_and_indent,       KeyCode_V, leon_KeyCode_Control, KeyCode_Shift);
 	Bind(cut,                         KeyCode_X, leon_KeyCode_Control);
-	Bind(redo,                        KeyCode_Y, leon_KeyCode_Control);
 	Bind(undo,                        KeyCode_Z, leon_KeyCode_Control);
+	Bind(redo,                        KeyCode_Z, leon_KeyCode_Control, KeyCode_Shift);
 	Bind(view_buffer_other_panel,     KeyCode_1, leon_KeyCode_Control);
 	Bind(swap_panels,                 KeyCode_2, leon_KeyCode_Control);
 	Bind(if_read_only_goto_position,  KeyCode_Return);
