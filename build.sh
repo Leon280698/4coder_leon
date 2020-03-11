@@ -3,10 +3,11 @@
 # If any command errors, stop the script
 set -e
 
+cd "$(dirname "$0")"
 CODE_HOME="$(dirname "$0")/.."
 
 # NOTE(yuval): Removed -Wno-writable-strings as it is the same as -Wno-write-strings
-opts="-Wno-write-strings -Wno-null-dereference -Wno-comment -Wno-switch -Wno-missing-declarations -Wno-logical-op-parentheses -g"
+opts="-Wno-write-strings -Wno-null-dereference -Wno-comment -Wno-switch -Wno-missing-declarations -Wno-logical-op-parentheses -g -DOS_MAC=1 -DOS_WINDOWS=0 -DOS_LINUX=0"
 
 arch=-m64
 
@@ -20,4 +21,6 @@ clang++ -I"$CODE_HOME" $arch $opts $debug -std=c++11 4coder_leon.cpp 4coder_leon
 
 rm "$CODE_HOME/metadata_generator"
 rm $preproc_file
+
 cp custom_4coder.so ../../
+cp -r custom_4coder.so.dSYM ../../
