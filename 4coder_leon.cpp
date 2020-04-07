@@ -188,8 +188,8 @@ leon_setup_default_mapping(Mapping *mapping, i64 global_id, i64 file_id, i64 cod
 #if OS_MAC
 	Bind(seek_end_of_line,       KeyCode_Right, KeyCode_Command);
 	Bind(seek_beginning_of_line, KeyCode_Left, KeyCode_Command);
-	Bind(goto_beginning_of_file, KeyCode_Up, KeyCode_Command);
-	Bind(goto_end_of_file,       KeyCode_Down, KeyCode_Command);
+	Bind(goto_beginning_of_file, KeyCode_Up, KeyCode_Command, KeyCode_Shift);
+	Bind(goto_end_of_file,       KeyCode_Down, KeyCode_Command, KeyCode_Shift);
 #endif
 	Bind(page_up,                KeyCode_PageUp);
 	Bind(page_down,              KeyCode_PageDown);
@@ -199,14 +199,18 @@ leon_setup_default_mapping(Mapping *mapping, i64 global_id, i64 file_id, i64 cod
 	Bind(move_down_10,           KeyCode_Down, leon_KeyCode_Control);
 	Bind(move_up_to_blank_line,            KeyCode_Up, KeyCode_Shift, leon_KeyCode_Control);
 	Bind(move_down_to_blank_line,          KeyCode_Down, KeyCode_Shift, leon_KeyCode_Control);
-	Bind(move_left_whitespace_boundary,    KeyCode_Left, KeyCode_Control);
-	Bind(move_right_whitespace_boundary,   KeyCode_Right, KeyCode_Control);
+	Bind(move_left_alpha_numeric_boundary,           KeyCode_Left, KeyCode_Alt);
+	Bind(move_right_alpha_numeric_boundary,          KeyCode_Right, KeyCode_Alt);
+	Bind(move_left_alpha_numeric_or_camel_boundary,  KeyCode_Left, KeyCode_Shift);
+	Bind(move_right_alpha_numeric_or_camel_boundary, KeyCode_Right,KeyCode_Shift);
+	Bind(move_left_whitespace_boundary,    KeyCode_Left, KeyCode_Alt, KeyCode_Shift);
+	Bind(move_right_whitespace_boundary,   KeyCode_Right, KeyCode_Alt, KeyCode_Shift);
 	Bind(move_line_up,                     KeyCode_Up, KeyCode_Alt);
 	Bind(move_line_down,                   KeyCode_Down, KeyCode_Alt);
-	Bind(backspace_alpha_numeric_boundary, KeyCode_Backspace, KeyCode_Control);
-	Bind(delete_alpha_numeric_boundary,    KeyCode_Delete, KeyCode_Control);
-	Bind(snipe_backward_whitespace_or_token_boundary, KeyCode_Backspace, KeyCode_Alt);
-	Bind(snipe_forward_whitespace_or_token_boundary,  KeyCode_Delete, KeyCode_Alt);
+	Bind(backspace_alpha_numeric_boundary, KeyCode_Backspace, KeyCode_Alt);
+	Bind(delete_alpha_numeric_boundary,    KeyCode_Delete, KeyCode_Alt);
+	Bind(snipe_backward_whitespace_or_token_boundary, KeyCode_Backspace, KeyCode_Alt, KeyCode_Shift);
+	Bind(snipe_forward_whitespace_or_token_boundary,  KeyCode_Delete, KeyCode_Alt, KeyCode_Shift);
 	Bind(set_mark,                    KeyCode_Space, KeyCode_Control);
 	Bind(replace_in_range,            KeyCode_A, leon_KeyCode_Control);
 	Bind(copy,                        KeyCode_C, leon_KeyCode_Control);
@@ -245,10 +249,6 @@ leon_setup_default_mapping(Mapping *mapping, i64 global_id, i64 file_id, i64 cod
 	SelectMap(code_id);
 	ParentMap(file_id);
 	BindTextInput(leon_write_text_and_auto_indent);
-	Bind(move_left_alpha_numeric_boundary,           KeyCode_Left, KeyCode_Control);
-	Bind(move_right_alpha_numeric_boundary,          KeyCode_Right, KeyCode_Control);
-	Bind(move_left_alpha_numeric_or_camel_boundary,  KeyCode_Left, KeyCode_Alt);
-	Bind(move_right_alpha_numeric_or_camel_boundary, KeyCode_Right, KeyCode_Alt);
 	Bind(comment_line_toggle,        KeyCode_Semicolon, leon_KeyCode_Control);
 	Bind(auto_indent_range,          KeyCode_Tab, KeyCode_Shift, KeyCode_Control);
 	Bind(auto_indent_line_at_cursor, KeyCode_Tab, KeyCode_Shift);
