@@ -148,7 +148,9 @@ leon_setup_default_mapping(Mapping *mapping, i64 global_id, i64 file_id, i64 cod
 	Bind(command_lister,                KeyCode_X, KeyCode_Alt);
 	Bind(project_command_lister,        KeyCode_X, KeyCode_Alt, KeyCode_Shift);
 	Bind(list_all_functions_current_buffer_lister, KeyCode_I, leon_KeyCode_Control, KeyCode_Shift);
-#if OS_WINDOWS
+#if OS_MAC
+	Bind(exit_4coder,          KeyCode_Q, KeyCode_Command);
+#else
 	Bind(exit_4coder,          KeyCode_F4, KeyCode_Alt);
 #endif
 	Bind(project_fkey_command, KeyCode_F1);
@@ -228,8 +230,8 @@ leon_setup_default_mapping(Mapping *mapping, i64 global_id, i64 file_id, i64 cod
 	Bind(duplicate_line,              KeyCode_L, leon_KeyCode_Control);
 	Bind(cursor_mark_swap,            KeyCode_M, leon_KeyCode_Control);
 	Bind(reopen,                      KeyCode_O, leon_KeyCode_Control, KeyCode_Shift);
-	Bind(query_replace,               KeyCode_Q, leon_KeyCode_Control);
-	Bind(query_replace_identifier,    KeyCode_Q, leon_KeyCode_Control, KeyCode_Shift);
+	Bind(query_replace,               KeyCode_Q, KeyCode_Control);
+	Bind(query_replace_identifier,    KeyCode_Q, KeyCode_Control, KeyCode_Shift);
 	Bind(query_replace_selection,     KeyCode_Q, KeyCode_Alt);
 	Bind(reverse_search,              KeyCode_R, leon_KeyCode_Control);
 	Bind(save,                        KeyCode_S, leon_KeyCode_Control);
