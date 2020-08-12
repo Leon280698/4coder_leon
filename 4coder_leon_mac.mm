@@ -14,3 +14,10 @@ void leon_mac_init(){
 	[appMenuItem setSubmenu:appMenu];
 	[NSApp setMainMenu:mainMenu];
 }
+
+void leon_mac_set_window_unsaved_changes(bool modified){
+	auto window = [NSApp mainWindow];
+
+	if(window)
+		window.documentEdited = modified;
+}

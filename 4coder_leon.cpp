@@ -8,6 +8,13 @@
 #include <4coder_default_include.cpp>
 #include <generated/managed_id_metadata.cpp>
 
+
+#if OS_MAC
+void leon_mac_init();
+void leon_mac_set_window_unsaved_changes(bool modified);
+#endif
+
+
 CUSTOM_COMMAND_SIG(leon_write_text_input){
 	write_text_input(app);
 }
@@ -49,6 +56,29 @@ CUSTOM_COMMAND_SIG(leon_write_text_and_auto_indent){
 
 CUSTOM_COMMAND_SIG(leon_backspace_char){
 	backspace_char(app);
+}
+
+function void leon_tick(Application_Links* app, Frame_Info frameInfo){
+	default_tick(app, frameInfo);
+
+#if OS_MAC
+	bool modified = false;
+
+	Scratch_Block scratch(app);
+	for(Buffer_ID buffer = get_buffer_next(app, 0, Access_ReadWriteVisible);
+		buffer != 0;
+		buffer = get_buffer_next(app, buffer, Access_ReadWriteVisible)){
+		Dirty_State dirty = buffer_get_dirty_state(app, buffer);
+
+		if(dirty == DirtyState_UnsavedChanges){
+			modified = true;
+
+			break;
+		}
+	}
+
+	leon_mac_set_window_unsaved_changes(modified);
+#endif
 }
 
 BUFFER_HOOK_SIG(leon_file_save){
@@ -277,10 +307,6 @@ leon_setup_default_mapping(Mapping *mapping, i64 global_id, i64 file_id, i64 cod
 	Bind(write_zero_struct,          KeyCode_0, leon_KeyCode_Control);
 }
 
-#if OS_MAC
-void leon_mac_init();
-#endif
-
 void
 custom_layer_init(Application_Links* app){
 	Thread_Context* tctx = get_thread_context(app);
@@ -291,6 +317,7 @@ custom_layer_init(Application_Links* app){
 	// NOTE(allen): default hooks and command maps
 	set_all_default_hooks(app);
 	set_custom_hook(app, HookID_SaveFile, leon_file_save);
+	set_custom_hook(app, HookID_Tick, leon_tick);
 	mapping_init(tctx, &framework_mapping);
 	leon_setup_default_mapping(&framework_mapping, mapid_global, mapid_file, mapid_code);
 
